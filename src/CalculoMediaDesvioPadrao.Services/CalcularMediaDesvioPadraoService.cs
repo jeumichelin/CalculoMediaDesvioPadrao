@@ -1,35 +1,60 @@
-using System.Globalization;
-using CalculoMediaDesvioPadrao.Abstractions.Dtos;
 using CalculoMediaDesvioPadrao.Abstractions.Interfaces;
 
 namespace CalculoMediaDesvioPadrao.Services;
 
 public class CalcularMediaDesvioPadraoService : ICalcularMediaDesvioPadraoService
 {
-    //private readonly ICalculo
+    private const string Calcular = ":c";
+    private const string Sair = ":q";
     
     public void Iniciar()
     {
-        while (true)
+        var valores = new List<Valor>();
+        var coletarValores = true;
+        var valorInformado = string.Empty;
+        
+        while (coletarValores)
         {
-            Console.WriteLine("Informe um número Real (ex. 1258.51) ou ':q' para sair:");
-    
-            var valorInformado = Console.ReadLine();
+            SolicitarValor();
 
-            if (valorInformado?.ToLower() == ":q")
-                return;
+            LerValor(ref valorInformado);
 
-            if (!decimal.TryParse(valorInformado,
-                                  NumberStyles.AllowDecimalPoint,
-                                  CultureInfo.InvariantCulture,
-                                  out var numeroReal))
+            switch ( valorInformado.ToLower() )
             {
-                Console.WriteLine($"O valor 12.8 {valorInformado} é inválido.");
-            }
-            else
-            {
-                Console.WriteLine($"Cálculo ainda não implementado, o numero digitado foi {numeroReal.ToString()}");   
+                case Sair:
+                    return;
+                
+                case Calcular:
+                    coletarValores = false;
+                    break;
+                
+                default:
+                    ArmazenarValor(valorInformado, valores);
+                    break;
             }
         }
+
+        ExecutarCalculo(valores);
+    }
+    
+    private void SolicitarValor() =>  Console.WriteLine("Informe um número Real (ex. 1258.51) ou ':q' para sair. Após informar todos os valores, digite ':c' para calcular.");
+    
+    private string LerValor(ref string valor) => valor = Console.ReadLine();
+
+    private void ArmazenarValor(string valorInformado, List<Valor> valores)
+    {
+        if (!valorInformado.IsParseableToDouble())
+        {
+            Console.WriteLine($"O valor {valorInformado} é inválido.");
+            return;
+        }
+        
+        valores.Add(new Valor(valorInformado.ParseableToDouble()));
+    }
+
+    private void ExecutarCalculo(List<Valor> valores)
+    {
+        var calculo = new Calculo(valores);
+        calculo.ExibirResultado();
     }
 }
